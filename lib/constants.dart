@@ -20,6 +20,12 @@ const headerVeiculoTable = <DataColumn>[
   ),
   DataColumn(
     label: Text(
+      'Ano',
+      style: tableHeaderTextStyle,
+    ),
+  ),
+  DataColumn(
+    label: Text(
       'Tipo',
       style: tableHeaderTextStyle,
     ),

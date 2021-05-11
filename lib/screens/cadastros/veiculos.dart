@@ -15,11 +15,12 @@ class _VeiculosScreenState extends State<VeiculosScreen> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
     ]);
     return Consumer<List<Veiculo>>(
       builder: (context, veiculoList, child) {
+        double width = MediaQuery.of(context).size.width;
         return Column(
           children: <Widget>[
             Expanded(
@@ -27,15 +28,6 @@ class _VeiculosScreenState extends State<VeiculosScreen> {
                 padding: EdgeInsets.only(left: 0.5),
                 controller: ScrollController(),
                 child: PaginatedDataTable(
-                  header: Center(
-                    child: Text(
-                      'Relação de veículos cadastrados',
-                      style: TextStyle(
-                        color: eiConsultoriaGreen,
-                        fontSize: 17.0,
-                      ),
-                    ),
-                  ),
                   source: VeiculoDataTableSource(
                     veiculoList: veiculoList,
                     context: context,
@@ -47,7 +39,7 @@ class _VeiculosScreenState extends State<VeiculosScreen> {
                       _rowsPerPage = r!;
                     });
                   },
-                  horizontalMargin: 1.0,
+                  horizontalMargin: width * 0.2,
                   rowsPerPage: _rowsPerPage,
                 ),
               ),
@@ -68,18 +60,35 @@ class VeiculoDataTableSource extends DataTableSource {
   @override
   DataRow getRow(int index) {
     Veiculo veiculo = veiculoList[index];
+    bool isVencido = DateTime.now().year - veiculo.ano! >= 9;
     return DataRow.byIndex(
+      color: MaterialStateProperty.resolveWith((Set states) {
+        if (isVencido) return Colors.yellow.withOpacity(0.25);
+        return null; // Use the default value.
+      }),
       index: index,
       cells: <DataCell>[
-        DataCell(Text(
-          veiculo.empresa!,
-        )),
-        DataCell(Text(
-          veiculo.placa!,
-        )),
-        DataCell(Text(
-          veiculo.tipo!,
-        )),
+        DataCell(
+          Text(
+            veiculo.empresa!,
+          ),
+        ),
+        DataCell(
+          Text(
+            veiculo.placa!,
+          ),
+        ),
+        DataCell(
+          Text(
+            veiculo.ano!.toString(),
+            style: TextStyle(color: isVencido ? Color(0xff8b0000) : null),
+          ),
+        ),
+        DataCell(
+          Text(
+            veiculo.tipo!,
+          ),
+        ),
       ],
     );
   }
