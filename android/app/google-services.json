@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "1082330741357",
+    "firebase_url": "https://checklist-ei-consultoria.firebaseio.com",
+    "project_id": "checklist-ei-consultoria",
+    "storage_bucket": "checklist-ei-consultoria.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082330741357:android:12952a38bd070c07895d64",
+        "android_client_info": {
+          "package_name": "com.thiagomesquita.checklist_eiconsuloria"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1082330741357-dvguoc5cp801pep47erhm3k1l0pt1tg1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSGy3EKIPlGWfKdUHxBoCWcje5hnc7uQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1082330741357-dvguoc5cp801pep47erhm3k1l0pt1tg1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082330741357:android:67dcbb93ba182206895d64",
+        "android_client_info": {
+          "package_name": "com.tmsistemas.checklist_eiconsultoria_atmm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1082330741357-dvguoc5cp801pep47erhm3k1l0pt1tg1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSGy3EKIPlGWfKdUHxBoCWcje5hnc7uQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1082330741357-dvguoc5cp801pep47erhm3k1l0pt1tg1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
