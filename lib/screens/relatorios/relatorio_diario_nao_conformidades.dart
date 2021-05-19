@@ -1,5 +1,6 @@
 import 'package:checklist_eiconsultoria_atmm/models/checklist_data.dart';
 import 'package:checklist_eiconsultoria_atmm/models/resposta.dart';
+import 'package:checklist_eiconsultoria_atmm/models/veiculo.dart';
 import 'package:checklist_eiconsultoria_atmm/widgets/carregador.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.Dart';
@@ -77,12 +78,68 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                 return Carregador();
               }
               List<Resposta> respostas = snapshot.data!;
-              if (respostas.isEmpty) {
-                double width = MediaQuery.of(context).size.width;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Padding(
+              return StreamBuilder<List<Veiculo>>(
+                stream: checklistData.getVeiculosPorRespostas(respostas),
+                builder: (context, snp) {
+                  if (!snp.hasData) {
+                    return Carregador();
+                  }
+                  List<Veiculo> veiculos = snp.data!;
+                  double width = MediaQuery.of(context).size.width;
+                  if (respostas.isEmpty || veiculos.isEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            left: width * 0.84,
+                            right: width * 0.01,
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                data = '';
+                                respostas = <Resposta>[];
+                              });
+                            },
+                            child: Text(
+                              'Fechar',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: EdgeInsets.symmetric(vertical: 15.0),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 9,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 100.0),
+                            child: Center(
+                              child: Text(
+                                'Não há não conformidades nesta data!',
+                                style: TextStyle(
+                                  color: eiConsultoriaSilver,
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    respostas = respostas
+                        .where((e) => veiculos
+                            .any((element) => element.placa == e.veiculo))
+                        .toList();
+                    List<List<DataCell>> naoConformidadeList =
+                        List<List<DataCell>>.empty(growable: true);
+                    List<Widget> naoConformidadeTable =
+                        List<Widget>.empty(growable: true);
+                    naoConformidadeTable.add(Padding(
                       padding: EdgeInsets.only(
                         left: width * 0.84,
                         right: width * 0.01,
@@ -103,102 +160,136 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                           padding: EdgeInsets.symmetric(vertical: 15.0),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 100.0),
-                        child: Center(
-                          child: Text(
-                            'Não há não conformidades nesta data!',
-                            style: TextStyle(
-                              color: eiConsultoriaSilver,
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
+                    ));
+                    veiculo = respostas.first.veiculo;
+                    int i = 0;
+                    String empresa = veiculos[i].empresa!;
+                    for (Resposta resposta in respostas) {
+                      if (veiculo == resposta.veiculo) {
+                        String questao =
+                            '${resposta.idQuestao.toString()} - ${resposta.questao}';
+                        int numLinhas = 1;
+                        if (questao.length >= 50 && questao.length < 100) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50)}';
+                          numLinhas = 2;
+                        } else if (questao.length >= 100 &&
+                            questao.length < 150) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100)}';
+                          numLinhas = 3;
+                        } else if (questao.length >= 150 &&
+                            questao.length < 200) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100, 150)}\n${questao.substring(150)}';
+                          numLinhas = 4;
+                        }
+                        String dscNC = resposta.dscNC!;
+                        int numLinhasDscNC = 1;
+                        if (dscNC.length >= 40 && dscNC.length < 80) {
+                          dscNC =
+                              '${dscNC.substring(0, 40)}\n${dscNC.substring(40)}';
+                          numLinhasDscNC = 2;
+                        } else if (dscNC.length >= 80 && dscNC.length < 120) {
+                          dscNC =
+                              '${dscNC.substring(0, 40)}\n${dscNC.substring(40, 80)}\n${dscNC.substring(80)}';
+                          numLinhasDscNC = 3;
+                        }
+                        naoConformidadeList.add(<DataCell>[
+                          DataCell(
+                            Text(
+                              questao,
+                              maxLines: numLinhas,
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              } else {
-                List<List<DataCell>> naoConformidadeList =
-                    List<List<DataCell>>.empty(growable: true);
-                List<Widget> naoConformidadeTable =
-                    List<Widget>.empty(growable: true);
-                double width = MediaQuery.of(context).size.width;
-                naoConformidadeTable.add(Padding(
-                  padding: EdgeInsets.only(
-                    left: width * 0.84,
-                    right: width * 0.01,
-                  ),
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        data = '';
-                        respostas = <Resposta>[];
-                      });
-                    },
-                    child: Text(
-                      'Fechar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: EdgeInsets.symmetric(vertical: 15.0),
-                    ),
-                  ),
-                ));
-                veiculo = respostas.first.veiculo;
-                for (Resposta resposta in respostas) {
-                  if (veiculo == resposta.veiculo) {
-                    String questao =
-                        '${resposta.idQuestao.toString()} - ${resposta.questao}';
-                    int numLinhas = 1;
-                    if (questao.length >= 50 && questao.length < 100) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50)}';
-                      numLinhas = 2;
-                    } else if (questao.length >= 100 && questao.length < 150) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100)}';
-                      numLinhas = 3;
-                    } else if (questao.length >= 150 && questao.length < 200) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100, 150)}\n${questao.substring(150)}';
-                      numLinhas = 4;
+                          DataCell(
+                            Text(
+                              dscNC,
+                              maxLines: numLinhasDscNC,
+                            ),
+                          ),
+                        ]);
+                      } else {
+                        naoConformidadeTable.add(
+                          PaginatedDataTable(
+                            header: Center(
+                              child: Text(
+                                'Relação de não conformidades - $veiculo - $empresa - $data',
+                                style: TextStyle(
+                                  color: eiConsultoriaGreen,
+                                  fontSize: 17.0,
+                                ),
+                              ),
+                            ),
+                            source: NaoConformidadeDataTableSource(
+                              naoConformidadeList: naoConformidadeList,
+                              context: context,
+                            ),
+                            columns: headerNaoConformidadeTable,
+                            availableRowsPerPage: paginationSelectableRowCount,
+                            onRowsPerPageChanged: (r) {
+                              setState(() {
+                                _rowsPerPage = r!;
+                              });
+                            },
+                            rowsPerPage: _rowsPerPage,
+                          ),
+                        );
+                        veiculo = resposta.veiculo;
+                        i++;
+                        empresa = veiculos[i].empresa!;
+                        naoConformidadeList =
+                            List<List<DataCell>>.empty(growable: true);
+                        String questao =
+                            '${resposta.idQuestao.toString()} - ${resposta.questao}';
+                        int numLinhas = 1;
+                        if (questao.length >= 50 && questao.length < 100) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50)}';
+                          numLinhas = 2;
+                        } else if (questao.length >= 100 &&
+                            questao.length < 150) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100)}';
+                          numLinhas = 3;
+                        } else if (questao.length >= 150 &&
+                            questao.length < 200) {
+                          questao =
+                              '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100, 150)}\n${questao.substring(150)}';
+                          numLinhas = 4;
+                        }
+                        String dscNC = resposta.dscNC!;
+                        int numLinhasDscNC = 1;
+                        if (dscNC.length >= 40 && dscNC.length < 80) {
+                          dscNC =
+                              '${dscNC.substring(0, 40)}\n${dscNC.substring(40)}';
+                          numLinhasDscNC = 2;
+                        } else if (dscNC.length >= 80 && dscNC.length < 120) {
+                          dscNC =
+                              '${dscNC.substring(0, 40)}\n${dscNC.substring(40, 80)}\n${dscNC.substring(80)}';
+                          numLinhasDscNC = 3;
+                        }
+                        naoConformidadeList.add(<DataCell>[
+                          DataCell(
+                            Text(
+                              questao,
+                              maxLines: numLinhas,
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              dscNC,
+                              maxLines: numLinhasDscNC,
+                            ),
+                          ),
+                        ]);
+                      }
                     }
-                    String dscNC = resposta.dscNC!;
-                    int numLinhasDscNC = 1;
-                    if (dscNC.length >= 40 && dscNC.length < 80) {
-                      dscNC =
-                          '${dscNC.substring(0, 40)}\n${dscNC.substring(40)}';
-                      numLinhasDscNC = 2;
-                    } else if (dscNC.length >= 80 && dscNC.length < 120) {
-                      dscNC =
-                          '${dscNC.substring(0, 40)}\n${dscNC.substring(40, 80)}\n${dscNC.substring(80)}';
-                      numLinhasDscNC = 3;
-                    }
-                    naoConformidadeList.add(<DataCell>[
-                      DataCell(
-                        Text(
-                          questao,
-                          maxLines: numLinhas,
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          dscNC,
-                          maxLines: numLinhasDscNC,
-                        ),
-                      ),
-                    ]);
-                  } else {
                     naoConformidadeTable.add(
                       PaginatedDataTable(
                         header: Center(
                           child: Text(
-                            'Relação de não conformidades - $veiculo - $data',
+                            'Relação de não conformidades - $veiculo - $empresa - $data',
                             style: TextStyle(
                               color: eiConsultoriaGreen,
                               fontSize: 17.0,
@@ -219,83 +310,13 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                         rowsPerPage: _rowsPerPage,
                       ),
                     );
-                    veiculo = resposta.veiculo;
-                    naoConformidadeList =
-                        List<List<DataCell>>.empty(growable: true);
-                    String questao =
-                        '${resposta.idQuestao.toString()} - ${resposta.questao}';
-                    int numLinhas = 1;
-                    if (questao.length >= 50 && questao.length < 100) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50)}';
-                      numLinhas = 2;
-                    } else if (questao.length >= 100 && questao.length < 150) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100)}';
-                      numLinhas = 3;
-                    } else if (questao.length >= 150 && questao.length < 200) {
-                      questao =
-                          '${questao.substring(0, 50)}\n${questao.substring(50, 100)}\n${questao.substring(100, 150)}\n${questao.substring(150)}';
-                      numLinhas = 4;
-                    }
-                    String dscNC = resposta.dscNC!;
-                    int numLinhasDscNC = 1;
-                    if (dscNC.length >= 40 && dscNC.length < 80) {
-                      dscNC =
-                          '${dscNC.substring(0, 40)}\n${dscNC.substring(40)}';
-                      numLinhasDscNC = 2;
-                    } else if (dscNC.length >= 80 && dscNC.length < 120) {
-                      dscNC =
-                          '${dscNC.substring(0, 40)}\n${dscNC.substring(40, 80)}\n${dscNC.substring(80)}';
-                      numLinhasDscNC = 3;
-                    }
-                    naoConformidadeList.add(<DataCell>[
-                      DataCell(
-                        Text(
-                          questao,
-                          maxLines: numLinhas,
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          dscNC,
-                          maxLines: numLinhasDscNC,
-                        ),
-                      ),
-                    ]);
+                    return ListView(
+                      controller: ScrollController(),
+                      children: naoConformidadeTable,
+                    );
                   }
-                }
-                naoConformidadeTable.add(
-                  PaginatedDataTable(
-                    header: Center(
-                      child: Text(
-                        'Relação de não conformidades - $veiculo - $data',
-                        style: TextStyle(
-                          color: eiConsultoriaGreen,
-                          fontSize: 17.0,
-                        ),
-                      ),
-                    ),
-                    source: NaoConformidadeDataTableSource(
-                      naoConformidadeList: naoConformidadeList,
-                      context: context,
-                    ),
-                    columns: headerNaoConformidadeTable,
-                    availableRowsPerPage: paginationSelectableRowCount,
-                    onRowsPerPageChanged: (r) {
-                      setState(() {
-                        _rowsPerPage = r!;
-                      });
-                    },
-                    rowsPerPage: _rowsPerPage,
-                  ),
-                );
-                return ListView(
-                  padding: EdgeInsets.only(left: 15.0),
-                  controller: ScrollController(),
-                  children: naoConformidadeTable,
-                );
-              }
+                },
+              );
             },
           );
   }

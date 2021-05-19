@@ -4,6 +4,7 @@ const eiConsultoriaGreen = Color(0xff75b631);
 const eiConsultoriaLightGreen = Color(0xffeee8aa);
 const eiConsultoriaBlue = Color(0xff34598d);
 const eiConsultoriaSilver = Color(0xffc0c0c0);
+const eiConsultoriaRed = Color(0xff8b0000);
 
 const headerVeiculoTable = <DataColumn>[
   DataColumn(

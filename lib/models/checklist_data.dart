@@ -1,51 +1,33 @@
 import 'dart:async';
 
 import 'package:checklist_eiconsultoria_atmm/models/empresa.dart';
-import 'package:checklist_eiconsultoria_atmm/models/localidade.dart';
-import 'package:checklist_eiconsultoria_atmm/models/questao.dart';
 import 'package:checklist_eiconsultoria_atmm/models/resposta.dart';
+import 'package:checklist_eiconsultoria_atmm/models/usuario_eiconsultoria.dart';
 //import 'package:checklist_eiconsultoria_atmm/models/unidade.dart';
 import 'package:checklist_eiconsultoria_atmm/models/veiculo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChecklistData {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  static User? _user;
+  static UsuarioEIConsultoria? _usuario;
+
+  void carregaUser() {
+    _auth.authStateChanges().listen((event) {
+      _user = event;
+    });
+    _user = _auth.currentUser;
+  }
+
+  void carregaUsuario(UsuarioEIConsultoria? usuario) {
+    _usuario = usuario;
+  }
 
   Stream<List<Empresa>> getEmpresas() {
     return _firestore.collection('empresas').orderBy('nome').snapshots().map(
         (event) => event.docs.map((e) => Empresa.fromMap(e.data())).toList());
-  }
-
-  Stream<List<Localidade>> getLocalidades() {
-    return _firestore.collection('localidades').orderBy('nome').snapshots().map(
-          (event) =>
-              event.docs.map((e) => Localidade.fromMap(e.data())).toList(),
-        );
-  }
-
-  FutureOr<Iterable<Localidade>> getLocalidadesFiltrada(String nome) {
-    return _firestore.collection('localidades').orderBy('nome').get().then(
-          (value) => value.docs
-              .map((e) => Localidade.fromMap(e.data()))
-              .toList()
-              .where(
-                (element) =>
-                    element.nome.toLowerCase().startsWith(nome.toLowerCase()),
-              )
-              .toList(),
-        );
-  }
-
-  Stream<List<Questao>> getQuestoes() {
-    return _firestore
-        .collection('questoes')
-        .orderBy('id')
-        .snapshots()
-        .map((event) {
-      return event.docs.map((e) {
-        return Questao.fromMap(e.data());
-      }).toList();
-    });
   }
 
   Stream<List<Resposta>> getRespostas(
@@ -94,6 +76,15 @@ class ChecklistData {
 //  }
 
   Stream<List<Veiculo>> getVeiculos() {
+    if (_usuario != null && _usuario!.empresa != 'Veracel') {
+      return _firestore
+          .collection('veiculos')
+          .where('empresa', isEqualTo: _usuario!.empresa)
+          .orderBy('placa')
+          .snapshots()
+          .map((event) =>
+              event.docs.map((e) => Veiculo.fromMap(e.data())).toList());
+    }
     return _firestore
         .collection('veiculos')
         .orderBy('empresa')
@@ -104,6 +95,24 @@ class ChecklistData {
   }
 
   FutureOr<Iterable<Veiculo>> getVeiculosFiltrados(String placa) {
+    if (_usuario != null && _usuario!.empresa != 'Veracel') {
+      return _firestore
+          .collection('veiculos')
+          .where('empresa', isEqualTo: _usuario!.empresa)
+          .orderBy('placa')
+          .get()
+          .then(
+            (value) => value.docs
+                .map((e) => Veiculo.fromMap(e.data()))
+                .toList()
+                .where(
+                  (element) => element.placa!
+                      .toLowerCase()
+                      .startsWith(placa.toLowerCase()),
+                )
+                .toList(),
+          );
+    }
     return _firestore
         .collection('veiculos')
         .orderBy('empresa')
@@ -122,130 +131,118 @@ class ChecklistData {
         );
   }
 
-  void addVeiculo(
-    String newPlaca,
-    int newAno,
-    String newTipo,
-    String newEmpresa,
-    bool isLaudo,
-  ) {
-    var addVeiculoData = Map<String, dynamic>();
-    addVeiculoData['placa'] = newPlaca;
-    addVeiculoData['ano'] = newAno;
-    addVeiculoData['tipo'] = newTipo;
-    addVeiculoData['empresa'] = newEmpresa;
-    addVeiculoData['laudo'] = isLaudo;
-    addVeiculoData['usuario'] = 'EIConsultoria Checklist';
-    _firestore.collection('veiculos').doc().set(addVeiculoData);
+  Stream<List<Veiculo>> getVeiculosPorRespostas(List<Resposta> respostas) {
+    if (_usuario != null && _usuario!.empresa != 'Veracel') {
+      return _firestore
+          .collection('veiculos')
+          .where('empresa', isEqualTo: _usuario!.empresa)
+          .snapshots()
+          .map((event) => event.docs
+              .map((e) => Veiculo.fromMap(e.data()))
+              .toList()
+              .where((veiculo) => respostas
+                  .any((resposta) => veiculo.placa == resposta.veiculo))
+              .toList());
+    }
+    return _firestore.collection('veiculos').snapshots().map((event) => event
+        .docs
+        .map((e) => Veiculo.fromMap(e.data()))
+        .toList()
+        .where((veiculo) =>
+            respostas.any((resposta) => veiculo.placa == resposta.veiculo))
+        .toList());
   }
 
-  void deleteVeiculo(Veiculo veiculo) {
-    _firestore
-        .collection('veiculos')
-        .where('placa', isEqualTo: veiculo.placa)
-        .get()
-        .then((value) {
-      value.docs.forEach((e) {
-        e.reference.delete();
-      });
-    });
-  }
-
-  void gerarRespostas(
-    List<Questao> questaoValidaList,
-    String data,
-    String localidade,
-    String veiculo,
-  ) {
-    questaoValidaList.forEach((e) {
-      var addRespostaData = Map<String, dynamic>();
-      addRespostaData['idQuestao'] = e.id;
-      addRespostaData['questao'] = e.nome;
-      addRespostaData['veiculo'] = veiculo;
-      addRespostaData['data'] = data;
-      addRespostaData['localidade'] = localidade;
-      addRespostaData['ok'] = true;
-      addRespostaData['dscNC'] = '';
-      addRespostaData['usuario'] = 'EIConsultoria Checklist';
+  Stream<List<UsuarioEIConsultoria>> getUser() {
+    try {
+      if (_user == null) {
+        return Stream.value(List<UsuarioEIConsultoria>.empty());
+      }
       _firestore
-          .collection('respostas')
-          .where('idQuestao', isEqualTo: e.id)
-          .where('data', isEqualTo: data)
-          .where('veiculo', isEqualTo: veiculo)
-          .where('localidade', isEqualTo: localidade)
+          .collection('usuarios')
+          .where('email', isEqualTo: _user!.email)
           .get()
           .then((value) {
-        if (value.docs.isEmpty) {
-          _firestore.collection('respostas').doc().set(addRespostaData);
-        }
+        value.docs.forEach((e) {
+          var usuario = e.data();
+          usuario['isEmailVerificado'] = _user!.emailVerified;
+          e.reference.set(usuario);
+        });
       });
-    });
+      print('teste3: $_user');
+      return _firestore
+          .collection('usuarios')
+          .where('email', isEqualTo: _user!.email)
+          .snapshots()
+          .map((event) => event.docs
+              .map((e) => UsuarioEIConsultoria.fromMap(e.data()))
+              .toList());
+    } catch (e) {
+      return Stream.value(List<UsuarioEIConsultoria>.empty());
+    }
   }
 
-  void updateResposta(Resposta resposta) {
-    _firestore
-        .collection('respostas')
-        .where('idQuestao', isEqualTo: resposta.idQuestao)
-        .where('data', isEqualTo: resposta.data)
-        .where('veiculo', isEqualTo: resposta.veiculo)
-        .where('localidade', isEqualTo: resposta.localidade)
-        .get()
-        .then((value) {
-      value.docs.forEach((e) {
-        var addRespostaData = Map<String, dynamic>();
-        addRespostaData['idQuestao'] = resposta.idQuestao;
-        addRespostaData['questao'] = resposta.questao;
-        addRespostaData['veiculo'] = resposta.veiculo;
-        addRespostaData['data'] = resposta.data;
-        addRespostaData['localidade'] = resposta.localidade;
-        addRespostaData['ok'] = resposta.ok;
-        addRespostaData['dscNC'] = resposta.dscNC;
-        addRespostaData['usuario'] = 'EIConsultoria Checklist';
-        e.reference.set(addRespostaData);
-      });
-    });
+  Future<String> logIn(String email, String senha) async {
+    try {
+      UserCredential userCredential =
+          await _auth.signInWithEmailAndPassword(email: email, password: senha);
+      _user = userCredential.user;
+      if (!_user!.emailVerified) {
+        return Future.value(
+          'Favor verificar seu e-mail para ter acesso ao sistema.',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        return Future.value('Senha incorreta.');
+      } else if (e.code == 'user-not-found') {
+        return Future.value('Usuário não encontrado.');
+      }
+    }
+    if (_user == null) {
+      return Future.value(
+        'Não foi logar, favor tentar novamente em instantes.',
+      );
+    }
+    return Future.value('');
   }
 
-  void upadateDscNC(String dscNCOld, String dscNCNew) {
-    _firestore
-        .collection('respostas')
-        .where('dscNC', isEqualTo: dscNCOld)
-        .get()
-        .then((value) => value.docs.forEach((e) {
-              var addRespostaData = e.data();
-              addRespostaData['dscNC'] = dscNCNew;
-              addRespostaData['usuario'] = 'EIConsultoria Checklist';
-              e.reference.set(addRespostaData);
-            }));
+  Future<String> createUsuario(
+    UsuarioEIConsultoria usuario,
+    String senha,
+  ) async {
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: usuario.email,
+        password: senha,
+      );
+      User user = userCredential.user!;
+      await user.updateProfile(displayName: usuario.nome);
+      await user.sendEmailVerification();
+      var addUsuarioData = Map<String, dynamic>();
+      addUsuarioData['nome'] = usuario.nome;
+      addUsuarioData['email'] = usuario.email;
+      addUsuarioData['empresa'] = usuario.empresa;
+      addUsuarioData['isEmailVerificado'] = usuario.isEmailVerificado;
+      _firestore.collection('usuarios').doc().set(addUsuarioData);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        return 'A senha fornecida é muito fraca.';
+      } else if (e.code == 'email-already-in-use') {
+        return 'Já existe um usuário cadastrado com esse e-mail.';
+      }
+    } catch (e) {
+      return 'Houve um erro inexperado, tente novamente em instantes.';
+    }
+    return 'Usuário cadastrado com sucesso. Foi enviada uma mensagem para o e-mail fornecido, favor verificar para concluir o cadastro.';
   }
 
-  void deleteRespostas(String veiculo, String data, String localidade) {
-    _firestore
-        .collection('respostas')
-        .where('veiculo', isEqualTo: veiculo)
-        .where('data', isEqualTo: data)
-        .where('localidade', isEqualTo: localidade)
-        .get()
-        .then((value) {
-      value.docs.forEach((e) {
-        e.reference.delete();
-      });
-    });
+  void reenviarEmail() async {
+    await _user!.sendEmailVerification();
   }
 
-  void updateRespostas(String data, String localidade) {
-    _firestore
-        .collection('respostas')
-        .where('data', isEqualTo: data)
-        .where('localidade', isEqualTo: localidade)
-        .get()
-        .then((value) {
-      value.docs.forEach((e) {
-        var addRespostaData = e.data();
-        addRespostaData['data'] = '06/05/2021';
-        addRespostaData['usuario'] = 'EIConsultoria Checklist';
-        e.reference.set(addRespostaData);
-      });
-    });
+  Future<void> logOut() async {
+    await _auth.signOut();
   }
 }

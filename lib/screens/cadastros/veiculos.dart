@@ -81,7 +81,7 @@ class VeiculoDataTableSource extends DataTableSource {
         DataCell(
           Text(
             veiculo.ano!.toString(),
-            style: TextStyle(color: isVencido ? Color(0xff8b0000) : null),
+            style: TextStyle(color: isVencido ? eiConsultoriaRed : null),
           ),
         ),
         DataCell(

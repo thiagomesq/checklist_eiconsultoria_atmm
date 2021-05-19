@@ -21,7 +21,6 @@ class _RelatorioDiarioInspecoesScreenState
   String data = '';
   DateTime hoje = DateTime.now();
   List<Resposta> respostas = List<Resposta>.empty(growable: true);
-  List<String> dscNCList = List<String>.empty(growable: true);
 
   @override
   void initState() {
@@ -36,11 +35,49 @@ class _RelatorioDiarioInspecoesScreenState
     data = '$diaString/$mesString/$ano';
   }
 
+  Widget semDados() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        TextButton(
+          onPressed: () {
+            setState(() {
+              data = '';
+            });
+          },
+          child: Text(
+            'Fechar',
+            style: TextStyle(color: Colors.white),
+          ),
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.red,
+            padding: EdgeInsets.symmetric(vertical: 15.0),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 100.0),
+            child: Center(
+              child: Text(
+                'Não há inserções nesta data!',
+                style: TextStyle(
+                  color: eiConsultoriaSilver,
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
     ]);
     final ChecklistData checklistData = ChecklistData();
     return Consumer<List<Veiculo>>(
@@ -82,43 +119,12 @@ class _RelatorioDiarioInspecoesScreenState
                           return Carregador();
                         }
                         respostas = snapshot.data!;
+                        respostas = respostas
+                            .where((e) =>
+                                veiculoList.any((e2) => e2.placa == e.veiculo))
+                            .toList();
                         if (respostas.isEmpty && data.isNotEmpty) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    data = '';
-                                  });
-                                },
-                                child: Text(
-                                  'Fechar',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding: EdgeInsets.symmetric(vertical: 15.0),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding:
-                                      EdgeInsets.symmetric(vertical: 100.0),
-                                  child: Center(
-                                    child: Text(
-                                      'Não há inserções nesta data!',
-                                      style: TextStyle(
-                                        color: eiConsultoriaSilver,
-                                        fontSize: 20.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
+                          return semDados();
                         } else if (respostas.isNotEmpty) {
                           List<List<DataCell>> veiculosInseridosList =
                               List<List<DataCell>>.empty(growable: true);
@@ -126,7 +132,6 @@ class _RelatorioDiarioInspecoesScreenState
                               List<List<String>>.empty(growable: true);
                           String v = respostas.first.veiculo;
                           int ncs = 0;
-                          dscNCList = List<String>.empty(growable: true);
                           Veiculo veiculo;
                           String localidade = respostas.first.localidade;
                           for (Resposta resposta in respostas) {
@@ -135,13 +140,11 @@ class _RelatorioDiarioInspecoesScreenState
                                   resposta.idQuestao != 58 &&
                                   resposta.dscNC!.toLowerCase() != 'na') {
                                 ncs++;
-                                if (!dscNCList.contains(resposta.dscNC)) {
-                                  dscNCList.add(resposta.dscNC!);
-                                }
                               }
                             } else {
                               veiculo = veiculoList.firstWhere(
                                 (element) => element.placa == v,
+                                orElse: () => Veiculo(),
                               );
                               veiculosInseridosListPDF.add(<String>[
                                 v,
@@ -165,7 +168,19 @@ class _RelatorioDiarioInspecoesScreenState
                                           ),
                                         ),
                                       )
-                                    : DataCell(Text('')),
+                                    : DataCell(
+                                        TextButton(
+                                          onPressed: () {},
+                                          child: Text(
+                                            'Ok',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            backgroundColor: eiConsultoriaGreen,
+                                          ),
+                                        ),
+                                      ),
                               ]);
                               v = resposta.veiculo;
                               localidade = resposta.localidade;
@@ -174,6 +189,7 @@ class _RelatorioDiarioInspecoesScreenState
                           }
                           veiculo = veiculoList.firstWhere(
                             (element) => element.placa == v,
+                            orElse: () => Veiculo(),
                           );
                           veiculosInseridosListPDF.add(<String>[
                             v,
@@ -196,7 +212,18 @@ class _RelatorioDiarioInspecoesScreenState
                                       ),
                                     ),
                                   )
-                                : DataCell(Text('')),
+                                : DataCell(
+                                    TextButton(
+                                      onPressed: () {},
+                                      child: Text(
+                                        'OK',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: eiConsultoriaGreen,
+                                      ),
+                                    ),
+                                  ),
                           ]);
                           veiculosInseridosListPDF
                               .sort((a, b) => a[1].compareTo(b[1]));
@@ -208,7 +235,6 @@ class _RelatorioDiarioInspecoesScreenState
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
                               Expanded(
-                                flex: 5,
                                 child: SingleChildScrollView(
                                   controller: ScrollController(),
                                   child: PaginatedDataTable(
@@ -385,33 +411,6 @@ class _RelatorioDiarioInspecoesScreenState
                                   ),
                                 ),
                               ),
-                              if (dscNCList.isNotEmpty)
-                                Expanded(
-                                  flex: 3,
-                                  child: ListView.builder(
-                                    itemBuilder: (context, index) {
-                                      String dscNC = dscNCList[index];
-                                      return Padding(
-                                        padding: EdgeInsets.only(bottom: 5.0),
-                                        child: TextButton(
-                                          onPressed: () {},
-                                          child: ListTile(
-                                            title: Text(
-                                              dscNC,
-                                              style: TextStyle(
-                                                  color: eiConsultoriaBlue),
-                                            ),
-                                          ),
-                                          style: TextButton.styleFrom(
-                                            backgroundColor:
-                                                eiConsultoriaLightGreen,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    itemCount: dscNCList.length,
-                                  ),
-                                ),
                             ],
                           );
                         } else {
