@@ -19,9 +19,7 @@ dependencies:
   cloud_firestore: ^2.1.0
   pdf: ^3.3.0
   fullscreen: ^1.0.3
-  flutter_password_strength: ^0.1.6
   email_validator: ^2.0.1
-  modal_progress_hud_nsn: ^0.1.0-nullsafety-0
 
 dev_dependencies:
   flutter_test:

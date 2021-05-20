@@ -5,7 +5,6 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_password_strength/flutter_password_strength.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
@@ -25,7 +24,6 @@ class _SignupScreenState extends State<SignupScreen> {
   static final String _empresaDefault = 'Selecione a empresa';
   String selectedEmpresa = _empresaDefault;
   String? _senha;
-  double forcaSenha = 0.0;
 
   Widget getMsgSignup(
     BuildContext context,
@@ -259,8 +257,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           if (value!.isEmpty) {
                             return 'Obrigatório';
                           }
-                          if (forcaSenha <= 0.69) {
-                            return 'Senha fraca!';
+                          if (value != confirmaSenhaController.text) {
+                            return 'Senhas não conferem!';
                           }
                           return null;
                         },
@@ -274,25 +272,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     SizedBox(
                       height: 10.0,
-                    ),
-                    FlutterPasswordStrength(
-                      password: _senha,
-                      height: 20.0,
-                      radius: 30.0,
-                      backgroundColor: eiConsultoriaSilver,
-                      strengthCallback: (value) {
-                        print(value);
-                        forcaSenha = value;
-                      },
-                    ),
-                    SizedBox(
-                      height: 22.0,
-                      child: Text(
-                        'Força da senha',
-                        style: TextStyle(
-                          color: eiConsultoriaBlue,
-                        ),
-                      ),
                     ),
                     Flexible(
                       child: TextFormField(
