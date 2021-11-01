@@ -216,7 +216,7 @@ class _EiconsultoriaTabBarState extends State<EiconsultoriaTabBar> {
                         ),
                         onPressed: () {},
                       ),
-                      Divider(
+                      /*Divider(
                         color: eiConsultoriaSilver,
                       ),
                       ListTile(
@@ -243,7 +243,7 @@ class _EiconsultoriaTabBarState extends State<EiconsultoriaTabBar> {
                           },
                         ),
                         onPressed: () {},
-                      ),
+                      ),*/
                     ],
                   ),
                 ),

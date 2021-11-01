@@ -136,6 +136,7 @@ class ChecklistData {
       return _firestore
           .collection('veiculos')
           .where('empresa', isEqualTo: _usuario!.empresa)
+          .orderBy('placa')
           .snapshots()
           .map((event) => event.docs
               .map((e) => Veiculo.fromMap(e.data()))
@@ -144,13 +145,13 @@ class ChecklistData {
                   .any((resposta) => veiculo.placa == resposta.veiculo))
               .toList());
     }
-    return _firestore.collection('veiculos').snapshots().map((event) => event
-        .docs
-        .map((e) => Veiculo.fromMap(e.data()))
-        .toList()
-        .where((veiculo) =>
-            respostas.any((resposta) => veiculo.placa == resposta.veiculo))
-        .toList());
+    return _firestore.collection('veiculos').orderBy('placa').snapshots().map(
+        (event) => event.docs
+            .map((e) => Veiculo.fromMap(e.data()))
+            .toList()
+            .where((veiculo) =>
+                respostas.any((resposta) => veiculo.placa == resposta.veiculo))
+            .toList());
   }
 
   Stream<List<UsuarioEIConsultoria>> getUser() {
@@ -169,7 +170,6 @@ class ChecklistData {
           e.reference.set(usuario);
         });
       });
-      print('teste3: $_user');
       return _firestore
           .collection('usuarios')
           .where('email', isEqualTo: _user!.email)

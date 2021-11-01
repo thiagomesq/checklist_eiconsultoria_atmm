@@ -20,15 +20,15 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
   int _rowsPerPage = 5;
   late String data;
   late String veiculo;
-  DateTime hoje = DateTime.now();
+  DateTime diaEscolhido = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     if (widget.data.isEmpty) {
-      int dia = hoje.day;
-      int mes = hoje.month;
-      int ano = hoje.year;
+      int dia = diaEscolhido.day;
+      int mes = diaEscolhido.month;
+      int ano = diaEscolhido.year;
       String diaString;
       String mesString;
       dia >= 10 ? diaString = dia.toString() : diaString = '0' + dia.toString();
@@ -48,9 +48,9 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
     final ChecklistData checklistData = ChecklistData();
     return data.isEmpty
         ? CalendarDatePicker(
-            firstDate: hoje.subtract(Duration(days: 365)),
-            lastDate: hoje,
-            initialDate: hoje,
+            firstDate: DateTime.now().subtract(Duration(days: 365)),
+            lastDate: DateTime.now(),
+            initialDate: diaEscolhido,
             onDateChanged: (date) {
               setState(() {
                 int dia = date.day;
@@ -92,12 +92,18 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                       children: <Widget>[
                         Padding(
                           padding: EdgeInsets.only(
-                            left: width * 0.84,
-                            right: width * 0.01,
+                            left: width * 0.87,
+                            right: width * 0.03,
+                            top: 10,
                           ),
                           child: TextButton(
                             onPressed: () {
                               setState(() {
+                                diaEscolhido = DateTime.utc(
+                                  int.parse(data.substring(6)),
+                                  int.parse(data.substring(4, 5)),
+                                  int.parse(data.substring(0, 2)),
+                                );
                                 data = '';
                                 respostas = <Resposta>[];
                               });
@@ -141,12 +147,18 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                         List<Widget>.empty(growable: true);
                     naoConformidadeTable.add(Padding(
                       padding: EdgeInsets.only(
-                        left: width * 0.84,
-                        right: width * 0.01,
+                        left: width * 0.87,
+                        right: width * 0.03,
+                        top: 10,
                       ),
                       child: TextButton(
                         onPressed: () {
                           setState(() {
+                            diaEscolhido = DateTime.utc(
+                              int.parse(data.substring(6)),
+                              int.parse(data.substring(4, 5)),
+                              int.parse(data.substring(0, 2)),
+                            );
                             data = '';
                             respostas = <Resposta>[];
                           });
