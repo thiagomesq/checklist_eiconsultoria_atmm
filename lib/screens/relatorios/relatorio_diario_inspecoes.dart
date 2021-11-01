@@ -256,7 +256,7 @@ class _RelatorioDiarioInspecoesScreenState
                                         TextButton(
                                           onPressed: () {},
                                           child: Text(
-                                            'Ok',
+                                            'OK',
                                             style:
                                                 TextStyle(color: Colors.white),
                                           ),
