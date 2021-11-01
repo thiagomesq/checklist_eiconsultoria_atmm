@@ -101,7 +101,7 @@ class _NaoConformidadeScreenState extends State<NaoConformidadeScreen> {
                               setState(() {
                                 diaEscolhido = DateTime.utc(
                                   int.parse(data.substring(6)),
-                                  int.parse(data.substring(4, 5)),
+                                  int.parse(data.substring(3, 5)),
                                   int.parse(data.substring(0, 2)),
                                 );
                                 data = '';
