@@ -218,7 +218,7 @@ class ChecklistData {
         password: senha,
       );
       User user = userCredential.user!;
-      await user.updateProfile(displayName: usuario.nome);
+      await user.updateDisplayName(usuario.nome);
       await user.sendEmailVerification();
       var addUsuarioData = Map<String, dynamic>();
       addUsuarioData['nome'] = usuario.nome;
